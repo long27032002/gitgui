@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to package and publish
+        required: true
+        default: v0.1.0
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -20,7 +29,8 @@ jobs:
             qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools dpkg-dev
       - name: Build Debian package
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DGITGUI_BUILD_TESTS=OFF -DGITGUI_PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DGITGUI_BUILD_TESTS=OFF -DGITGUI_PACKAGE_VERSION="$VERSION"
           cmake --build build --parallel
           cpack --config build/CPackConfig.cmake -B build -G DEB
           mkdir -p dist
@@ -40,7 +50,8 @@ jobs:
       - name: Build Arch package
         run: |
           pacman -Syu --noconfirm --needed git cmake ninja qt6-base qt6-declarative qt6-tools
-          sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" packaging/arch/PKGBUILD
+          VERSION="${RELEASE_TAG#v}"
+          sed -i "s/^pkgver=.*/pkgver=$VERSION/" packaging/arch/PKGBUILD
           useradd --create-home builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
           runuser -u builder -- makepkg --nodeps --noconfirm -p packaging/arch/PKGBUILD
@@ -97,5 +108,6 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
           files: release-assets/*
