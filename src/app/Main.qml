@@ -741,14 +741,14 @@ ApplicationWindow {
                 MenuItem {
                     text: "Tiếng Việt"
                     checkable: true
-                    checked: language.language === "vi"
-                    onTriggered: language.setLanguage("vi")
+                    checked: languageController.language === "vi"
+                    onTriggered: languageController.setLanguage("vi")
                 }
                 MenuItem {
                     text: "English"
                     checkable: true
-                    checked: language.language === "en"
-                    onTriggered: language.setLanguage("en")
+                    checked: languageController.language === "en"
+                    onTriggered: languageController.setLanguage("en")
                 }
             }
         }
