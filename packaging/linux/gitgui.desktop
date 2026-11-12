@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GitGui
+Comment=Git desktop client
+Exec=gitgui
+Icon=applications-development
+Terminal=false
+Categories=Development;RevisionControl;
+StartupNotify=true

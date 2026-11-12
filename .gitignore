@@ -1,0 +1,21 @@
+# Local build and packaging output
+/build/
+/build-*/
+/dist/
+/package/
+*.deb
+*.pkg.tar.*
+
+# Handoff notes are local to the development session
+/HANDOFF.md
+
+# Local tooling and editor state
+/.agents/
+/.aws/
+/.codex/
+/.idea/
+/.vscode/
+*.user
+*.swp
+*.swo
+*.core

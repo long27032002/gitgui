@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.21)
+project(GitGui VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core)
+add_subdirectory(src/core)
+add_subdirectory(src/app)
+
+option(GITGUI_BUILD_TESTS "Build GitGui tests" ON)
+if(GITGUI_BUILD_TESTS)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+include(GNUInstallDirs)
+install(TARGETS gitgui RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES packaging/linux/gitgui.desktop
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+set(CPACK_PACKAGE_NAME "gitgui")
+set(CPACK_PACKAGE_VENDOR "GitGui contributors")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Git desktop client for Linux")
+set(GITGUI_PACKAGE_VERSION "${PROJECT_VERSION}" CACHE STRING "Version assigned to release packages")
+set(CPACK_PACKAGE_VERSION "${GITGUI_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_CONTACT "https://github.com/long27032002/gitgui/issues")
+set(CPACK_PACKAGE_FILE_NAME "gitgui-${GITGUI_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "GitGui contributors")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "git, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-templates, qml6-module-qtquick-window")
+include(CPack)

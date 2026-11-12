@@ -1,0 +1,101 @@
+name: Build release packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  debian:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build qt6-base-dev qt6-declarative-dev \
+            qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools dpkg-dev
+      - name: Build Debian package
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DGITGUI_BUILD_TESTS=OFF -DGITGUI_PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          cmake --build build --parallel
+          cpack --config build/CPackConfig.cmake -B build -G DEB
+          mkdir -p dist
+          cp build/*.deb dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: dist/*.deb
+          if-no-files-found: error
+
+  arch:
+    runs-on: ubuntu-24.04
+    container:
+      image: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Arch package
+        run: |
+          pacman -Syu --noconfirm --needed git cmake ninja qt6-base qt6-declarative qt6-tools
+          sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" packaging/arch/PKGBUILD
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- makepkg --nodeps --noconfirm -p packaging/arch/PKGBUILD
+          mkdir -p dist
+          cp ./*.pkg.tar.* dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-package
+          path: dist/*.pkg.tar.*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Build Windows executable and portable bundle
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DGITGUI_BUILD_TESTS=OFF
+          cmake --build build --parallel
+          $exe = (Resolve-Path 'build/src/app/gitgui.exe').Path
+          $bundle = Join-Path $PWD 'dist/GitGui-windows-x64'
+          New-Item -ItemType Directory -Force $bundle | Out-Null
+          Copy-Item $exe $bundle
+          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --compiler-runtime --qmldir src/app $bundle/gitgui.exe
+          Copy-Item LICENSE $bundle
+          Copy-Item README.md $bundle
+          Compress-Archive -Path "$bundle/*" -DestinationPath dist/GitGui-windows-x64.zip -Force
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item $exe dist/gitgui.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            dist/gitgui.exe
+            dist/GitGui-windows-x64.zip
+          if-no-files-found: error
+
+  release:
+    needs: [debian, arch, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*

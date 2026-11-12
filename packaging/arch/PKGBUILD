@@ -1,0 +1,24 @@
+pkgname=gitgui
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Git desktop client for Linux'
+arch=('x86_64')
+url='https://github.com/long27032002/gitgui'
+license=('MIT')
+depends=('git' 'qt6-base' 'qt6-declarative')
+makedepends=('cmake' 'ninja' 'qt6-tools')
+source=("${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cmake -S "$srcdir/$pkgname-$pkgver" -B "$srcdir/build" \
+        -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+        -DGITGUI_BUILD_TESTS=OFF
+    cmake --build "$srcdir/build"
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+    install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
