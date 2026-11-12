@@ -54,9 +54,11 @@ jobs:
           sed -i "s/^pkgver=.*/pkgver=$VERSION/" packaging/arch/PKGBUILD
           useradd --create-home builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
-          runuser -u builder -- makepkg --nodeps --noconfirm -p packaging/arch/PKGBUILD
+          cd packaging/arch
+          runuser -u builder -- makepkg --nodeps --noconfirm
+          cd "$GITHUB_WORKSPACE"
           mkdir -p dist
-          cp ./*.pkg.tar.* dist/
+          cp packaging/arch/*.pkg.tar.* dist/
       - uses: actions/upload-artifact@v4
         with:
           name: arch-package
@@ -78,6 +80,8 @@ jobs:
       - name: Build Windows executable and portable bundle
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DGITGUI_BUILD_TESTS=OFF
           cmake --build build --parallel
           $exe = (Resolve-Path 'build/src/app/gitgui.exe').Path

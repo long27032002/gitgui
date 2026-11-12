@@ -19,7 +19,11 @@ add_library(gitapp STATIC
 )
 target_include_directories(gitapp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gitapp PUBLIC gitcore Qt6::Core Qt6::Gui Qt6::Concurrent)
-target_compile_options(gitapp PRIVATE -Wall -Wextra -Wpedantic)
+if(MSVC)
+    target_compile_options(gitapp PRIVATE /W4)
+else()
+    target_compile_options(gitapp PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 qt_add_executable(gitgui main.cpp)
 qt_add_qml_module(gitgui

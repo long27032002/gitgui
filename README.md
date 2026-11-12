@@ -22,11 +22,11 @@ cmake --build build
 
 Release assets include a Debian package, an Arch Linux package for x86_64, and
 a portable Windows bundle. On EndeavourOS, install the Arch package with
-`sudo pacman -U gitgui-0.1.0-1-x86_64.pkg.tar.zst` (replace the version with
-the release you downloaded). Linux packages require Git and the Qt 6 runtime
-modules listed by the package manager. On Windows, install Git for Windows and use the
-`GitGui-windows-x64.zip` bundle; `gitgui.exe` by itself does not include Qt's
-runtime libraries.
+`sudo pacman -U ./gitgui-*.pkg.tar.zst`. On Debian or Ubuntu, install the `.deb`
+with `sudo apt install ./gitgui-*.deb`. Linux packages require Git and the Qt 6
+runtime modules listed by the package manager. On Windows, install Git for
+Windows and use the `GitGui-windows-x64.zip` bundle; `gitgui.exe` by itself does
+not include Qt's runtime libraries.
 
 ## License
 
