@@ -4,12 +4,16 @@
 #include <QFileInfo>
 #include <QSettings>
 
+#include <memory>
+
 namespace gitapp {
 
 namespace {
-QSettings makeSettings(const QString &iniFile)
+std::unique_ptr<QSettings> makeSettings(const QString &iniFile)
 {
-    return iniFile.isEmpty() ? QSettings() : QSettings(iniFile, QSettings::IniFormat);
+    if (iniFile.isEmpty())
+        return std::make_unique<QSettings>();
+    return std::make_unique<QSettings>(iniFile, QSettings::IniFormat);
 }
 } // namespace
 
@@ -47,7 +51,7 @@ void RecentRepos::enablePersistence(const QString &iniFile)
 {
     m_persistent = true;
     m_iniFile = iniFile;
-    const QStringList saved = makeSettings(m_iniFile).value(QStringLiteral("recentRepos")).toStringList();
+    const QStringList saved = makeSettings(m_iniFile)->value(QStringLiteral("recentRepos")).toStringList();
     beginResetModel();
     m_paths.clear();
     for (const QString &p : saved)
@@ -95,9 +99,9 @@ void RecentRepos::save() const
 {
     if (!m_persistent)
         return;
-    QSettings s = makeSettings(m_iniFile);
-    s.setValue(QStringLiteral("recentRepos"), m_paths);
-    s.sync();
+    auto settings = makeSettings(m_iniFile);
+    settings->setValue(QStringLiteral("recentRepos"), m_paths);
+    settings->sync();
 }
 
 } // namespace gitapp
