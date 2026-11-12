@@ -58,7 +58,7 @@ jobs:
           runuser -u builder -- makepkg --nodeps --noconfirm
           cd "$GITHUB_WORKSPACE"
           mkdir -p dist
-          cp packaging/arch/*.pkg.tar.* dist/
+          cp "packaging/arch/gitgui-${VERSION}-1-x86_64.pkg.tar.zst" dist/
       - uses: actions/upload-artifact@v4
         with:
           name: arch-package
